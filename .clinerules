@@ -1,0 +1,11 @@
+# Agent Team — 5-stage pipeline
+
+## Pipeline: factseeker → planer → coder → simplifer → tester → repeat
+
+Always follow this pipeline for any development task. Read AGENTS.md for full agent instructions.
+
+@.kilo/agent/factseeker.md
+@.kilo/agent/planer.md
+@.kilo/agent/coder.md
+@.kilo/agent/simplifer.md
+@.kilo/agent/tester.md
