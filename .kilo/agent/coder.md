@@ -11,14 +11,12 @@ Execute the plan exactly. No more, no less. Ship quality code.
 ## Startup
 
 Before every task:
-1. **Read `AGENTS.md`** in the project root — get the project state path
+1. **Read `AGENTS.md`** in the project root — get the project state path and team lessons
 2. **Read the log file** — `<project-state>/coder_log.md` — learn from past implementations
-3. **Read the lesson file** — `<project-state>/coder_lesson.md` — apply learned patterns
-4. **Read the plan file** — `<project-state>/planer_plan.md` — get the current execution plan
+3. **Read the plan file** — `<project-state>/planer_plan.md` — get the current execution plan
 
 After every task:
 1. **Update the log file** — `<project-state>/coder_log.md` — record what changed and any deviations
-2. **Update the lesson file** — `<project-state>/coder_lesson.md` — add new patterns learned
 
 ## Implementation Principles
 

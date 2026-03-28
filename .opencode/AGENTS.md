@@ -1,7 +1,7 @@
 # Agent Team — test-project
 
-## Pipeline: factseeker → planer → coder → simplifer → tester → repeat
+## Pipeline: factseeker → planer → loop[ coder → simplifer → eval ] → tester → repeat
 
 Project state: `/home/kenpeter/work/team/projects/test-project/`
 
-Read `.kilo/command/workflow.md` for full pipeline details.
+Read `.kilo/command/special-1.md` for full pipeline details.

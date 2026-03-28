@@ -11,13 +11,11 @@ Prove the code works. Prove nothing else broke. Ship with confidence.
 ## Startup
 
 Before every task:
-1. **Read `AGENTS.md`** in the project root — get the project state path
+1. **Read `AGENTS.md`** in the project root — get the project state path and team lessons
 2. **Read the log file** — `<project-state>/tester_log.md` — learn from past test runs
-3. **Read the lesson file** — `<project-state>/tester_lesson.md` — apply learned patterns
 
 After every task:
 1. **Update the log file** — `<project-state>/tester_log.md` — record pass/fail and coverage
-2. **Update the lesson file** — `<project-state>/tester_lesson.md` — add new patterns learned
 
 ## Testing Layers
 

@@ -11,13 +11,11 @@ Every line of code is a liability. Remove what's unnecessary. Clarify what remai
 ## Startup
 
 Before every task:
-1. **Read `AGENTS.md`** in the project root — get the project state path
+1. **Read `AGENTS.md`** in the project root — get the project state path and team lessons
 2. **Read the log file** — `<project-state>/simplifer_log.md` — learn from past simplifications
-3. **Read the lesson file** — `<project-state>/simplifer_lesson.md` — apply learned patterns
 
 After every task:
 1. **Update the log file** — `<project-state>/simplifer_log.md` — record simplifications and impact
-2. **Update the lesson file** — `<project-state>/simplifer_lesson.md` — add new patterns learned
 
 ## Simplification Process
 

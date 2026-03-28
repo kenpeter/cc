@@ -5,7 +5,7 @@ Run the full pipeline with TWO agents at each stage, working in parallel.
 ## Pipeline
 
 ```
-factseeker(2) → planer(2) → coder(2) → simplifer(2) → tester(2) → done
+factseeker(2) → planer(2) → coder(2) → simplifer(2) → tester(2) → reviewer(2) → done
 ```
 
 ## Execution
@@ -43,6 +43,12 @@ Each stage runs twice in parallel. Results are merged or the best is chosen.
 - Merge: combine test results, any fail = overall fail
 - Both log to `tester_log.md`
 
+### Stage 6: Reviewer x2
+- Agent A reviews independently (requirements, quality, security)
+- Agent B reviews independently with different focus areas
+- Merge: both must approve, or reject goes to the specific stage
+- Both log to `reviewer_log.md`
+
 ## Merge Strategy
 
 When two agents produce different results:
@@ -51,6 +57,7 @@ When two agents produce different results:
 3. **Code**: pick the diff with fewer lines, cleaner style, fewer dependencies
 4. **Simplified**: pick the version with fewer lines that still passes tests
 5. **Tests**: union all tests, any failure = overall failure
+6. **Review**: both reviewers must approve, either rejects = overall reject
 
 ## When to Use
 

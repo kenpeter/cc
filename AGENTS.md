@@ -1,6 +1,6 @@
 # Agent Team Configuration
 
-This project uses a 5-agent pipeline for all development work.
+This project uses a 6-agent pipeline for all development work.
 
 ## Agents
 
@@ -11,19 +11,21 @@ This project uses a 5-agent pipeline for all development work.
 | Coder | Implementation | `.kilo/agent/coder.md` |
 | Simplifier | Cleanup & simplification | `.kilo/agent/simplifer.md` |
 | Tester | Testing & verification | `.kilo/agent/tester.md` |
+| Reviewer | Final quality gate & approval | `.kilo/agent/reviewer.md` |
 
 ## Workflow
 
-See `.kilo/command/workflow.md` for the full pipeline.
+See `.kilo/command/special-1.md` for the full pipeline.
 
 ```
-factseeker → planer → coder → simplifer → tester → done
+factseeker → planer → loop[ coder → simplifer → eval ] → tester → factseeker (next problem)
 ```
 
 ## Rules
 
 1. Always start with Fact Seeker — never guess, always investigate
 2. Plan before coding — no cowboy coding
-3. Test everything — no green light, no ship
-4. Simplify after testing — clean code is maintainable code
-5. Loop until done — iterate the full pipeline as needed
+3. Inner loop: coder → simplifier → eval until it passes (max 5 iterations)
+4. Eval failure goes back to Coder with specific failures listed
+5. Tester is the final gate — fail goes back into the inner loop
+6. Loop until done — iterate the full pipeline as needed
