@@ -16,17 +16,12 @@ echo ""
 # 1. Create project state directory
 mkdir -p "$TEAM_DIR/projects/$PROJECT_NAME"
 
-# 2. Copy agent state templates
-for agent in factseeker planer coder simplifer tester; do
+# 2. Copy agent log templates (no lesson files — overseer handles team knowledge via AGENTS.md)
+for agent in factseeker planer coder simplifer tester reviewer; do
     if [ ! -f "$TEAM_DIR/projects/$PROJECT_NAME/${agent}_log.md" ]; then
         cp "$TEAM_DIR/.kilo/agent/${agent}_log.md" \
            "$TEAM_DIR/projects/$PROJECT_NAME/${agent}_log.md"
         echo "  Created ${agent}_log.md"
-    fi
-    if [ ! -f "$TEAM_DIR/projects/$PROJECT_NAME/${agent}_lesson.md" ]; then
-        cp "$TEAM_DIR/.kilo/agent/${agent}_lesson.md" \
-           "$TEAM_DIR/projects/$PROJECT_NAME/${agent}_lesson.md"
-        echo "  Created ${agent}_lesson.md"
     fi
 done
 if [ ! -f "$TEAM_DIR/projects/$PROJECT_NAME/planer_plan.md" ]; then
@@ -49,15 +44,17 @@ fi
 if [ ! -e "$TARGET_DIR/.opencode/command" ]; then
     ln -s "$TEAM_DIR/.kilo/command" "$TARGET_DIR/.opencode/command"
 fi
-cat > "$TARGET_DIR/.opencode/AGENTS.md" << EOF
+if [ ! -f "$TARGET_DIR/.opencode/AGENTS.md" ]; then
+    cat > "$TARGET_DIR/.opencode/AGENTS.md" << EOF
 # Agent Team — $PROJECT_NAME
 
-## Pipeline: factseeker → planer → coder → simplifer → tester → repeat
+## Pipeline: factseeker → planer → loop[ coder → simplifer → eval ] → tester → reviewer → overseer → AGENTS.md → repeat
 
 Project state: \`$TEAM_DIR/projects/$PROJECT_NAME/\`
 
-Read \`.kilo/command/workflow.md\` for full pipeline details.
+Read \`.kilo/command/special-1.md\` for full pipeline details.
 EOF
+fi
 
 # 5. Create .claude
 mkdir -p "$TARGET_DIR/.claude"
@@ -67,21 +64,42 @@ fi
 if [ ! -e "$TARGET_DIR/.claude/command" ]; then
     ln -s "$TEAM_DIR/.kilo/command" "$TARGET_DIR/.claude/command"
 fi
-cat > "$TARGET_DIR/.claude/AGENTS.md" << EOF
+if [ ! -f "$TARGET_DIR/.claude/AGENTS.md" ]; then
+    cat > "$TARGET_DIR/.claude/AGENTS.md" << EOF
 # Agent Team — $PROJECT_NAME
 
-## Pipeline: factseeker → planer → coder → simplifer → tester → repeat
+## Pipeline: factseeker → planer → loop[ coder → simplifer → eval ] → tester → reviewer → overseer → AGENTS.md → repeat
 
 Project state: \`$TEAM_DIR/projects/$PROJECT_NAME/\`
 
-Read \`.kilo/command/workflow.md\` for full pipeline details.
+Read \`.kilo/command/special-1.md\` for full pipeline details.
+
+---
+
+## How to Read This File
+
+Every agent reads this file at startup. It contains:
+1. **Project context** — where things are, how the project works
+2. **Team Lessons** — abstract lessons injected by the overseer (chat window agent) after each full pipeline run
+
+---
+
+## Team Lessons
+
+> Written by the overseer (chat window agent) after reading all *_log.md files from a completed run.
+> Format: \`### [YYYY-MM-DD] [Title]\` / \`**Pattern**: ...\` / \`**Applies to**: [agent names]\`
+
+*No lessons yet.*
+
+---
 EOF
+fi
 
 # 6. Create .cursorrules
 if [ ! -f "$TARGET_DIR/.cursorrules" ]; then
     cat > "$TARGET_DIR/.cursorrules" << 'EOF'
-# Agent Team — 5-stage pipeline
-## Pipeline: factseeker → planer → coder → simplifer → tester → repeat
+# Agent Team — 6-stage pipeline with self-evolution
+## Pipeline: factseeker → planer → coder → simplifer → tester → reviewer → overseer → AGENTS.md → repeat
 Read AGENTS.md and .kilo/ for full instructions.
 EOF
     echo "  Created .cursorrules"
@@ -90,8 +108,8 @@ fi
 # 7. Create .clinerules
 if [ ! -f "$TARGET_DIR/.clinerules" ]; then
     cat > "$TARGET_DIR/.clinerules" << 'EOF'
-# Agent Team — 5-stage pipeline
-## Pipeline: factseeker → planer → coder → simplifer → tester → repeat
+# Agent Team — 6-stage pipeline with self-evolution
+## Pipeline: factseeker → planer → coder → simplifer → tester → reviewer → overseer → AGENTS.md → repeat
 Read AGENTS.md and .kilo/ for full instructions.
 EOF
     echo "  Created .clinerules"
@@ -103,25 +121,28 @@ if [ ! -f "$TARGET_DIR/AGENTS.md" ]; then
 # Agent Team — $PROJECT_NAME
 
 ## Pipeline
-factseeker → planer → coder → simplifer → tester → repeat
+factseeker → planer → loop[ coder → simplifer → eval ] → tester → reviewer → overseer → AGENTS.md → repeat
 
 ## Project State
-All agent logs, lessons, and plans live in:
+All agent logs and plans live in:
 \`$TEAM_DIR/projects/$PROJECT_NAME/\`
 
 ## Agents
-| Agent | State Files |
-|-------|-------------|
-| Fact Seeker | \`factseeker_log.md\`, \`factseeker_lesson.md\` |
-| Planner | \`planer_plan.md\`, \`planer_log.md\`, \`planer_lesson.md\` |
-| Coder | \`coder_log.md\`, \`coder_lesson.md\` |
-| Simplifier | \`simplifer_log.md\`, \`simplifer_lesson.md\` |
-| Tester | \`tester_log.md\`, \`tester_lesson.md\` |
+| Agent | Role | State Files |
+|-------|------|-------------|
+| Fact Seeker | Investigates codebase | \`factseeker_log.md\` |
+| Planner | Writes execution plan | \`planer_plan.md\`, \`planer_log.md\` |
+| Coder | Implements plan | \`coder_log.md\` |
+| Simplifier | Cleans code | \`simplifer_log.md\` |
+| Tester | Runs full test suite | \`tester_log.md\` |
+| Reviewer | Final quality gate | \`reviewer_log.md\` |
+
+## Overseer
+The chat window (Claude Code session) monitors the full flow, reads all logs after reviewer approves, extracts abstract lessons, and injects them into \`AGENTS.md\` before the next loop.
 
 ## Commands
-- \`/workflow <problem>\` — run full pipeline
-- \`/special-1\` — 1 agent per stage
-- \`/special-2\` — 2 agents per stage (doubled up)
+- \`/special-1\` — 1 agent per stage (default)
+- \`/special-2\` — 2 agents per stage (high-risk tasks)
 EOF
     echo "  Created AGENTS.md"
 fi

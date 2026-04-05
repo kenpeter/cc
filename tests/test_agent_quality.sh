@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Agent Quality Check Tests
-# Verifies each agent has all required files and proper structure
+# Verifies each agent has required files and proper structure
 
 set -euo pipefail
 
@@ -34,6 +34,19 @@ assert_grep() {
     fi
 }
 
+assert_not_grep() {
+    local desc="$1"
+    local pattern="$2"
+    local file="$3"
+    if ! grep -qi "$pattern" "$file" 2>/dev/null; then
+        echo "  ✅ $desc"
+        PASS=$((PASS+1))
+    else
+        echo "  ❌ $desc"
+        FAIL=$((FAIL+1))
+    fi
+}
+
 check_agent() {
     local agent="$1"
     echo ""
@@ -41,16 +54,14 @@ check_agent() {
 
     assert "agent definition exists" test -f "$KIL/agent/$agent.md"
     assert "log file exists" test -f "$KIL/agent/${agent}_log.md"
-    assert "lesson file exists" test -f "$KIL/agent/${agent}_lesson.md"
+    assert_not_grep "no _lesson.md file reference (lessons removed)" "_lesson\.md\|lesson file\|lesson_" "$KIL/agent/$agent.md"
 
-    assert_grep "agent references log" "log" "$KIL/agent/$agent.md"
-    assert_grep "agent references lesson" "lesson" "$KIL/agent/$agent.md"
+    assert_grep "agent reads AGENTS.md at startup" "AGENTS.md" "$KIL/agent/$agent.md"
+    assert_grep "agent reads log at startup" "log" "$KIL/agent/$agent.md"
+    assert_grep "agent updates log after task" "update.*log\|log.*update" "$KIL/agent/$agent.md"
     assert_grep "agent has Startup section" "startup\|before every task\|before each task" "$KIL/agent/$agent.md"
     assert_grep "agent has Rules section" "## Rules" "$KIL/agent/$agent.md"
     assert_grep "agent has Output section" "output format\|output\|report" "$KIL/agent/$agent.md"
-
-    assert_grep "log has entry format" "format\|status\|date" "$KIL/agent/${agent}_log.md"
-    assert_grep "lesson has pattern sections" "pattern" "$KIL/agent/${agent}_lesson.md"
 }
 
 echo "=== Agent Quality Check Tests ==="
@@ -60,6 +71,13 @@ check_agent "planer"
 check_agent "coder"
 check_agent "simplifer"
 check_agent "tester"
+check_agent "reviewer"
+
+# --- No lesson files should exist ---
+echo ""
+echo "[No Lesson Files (removed)]"
+LESSON_COUNT=$(find "$KIL/agent" -name "*_lesson.md" -maxdepth 1 | wc -l)
+assert "zero lesson files exist" test "$LESSON_COUNT" -eq 0
 
 # --- Planner Special: plan.md ---
 echo ""
@@ -71,20 +89,29 @@ assert_grep "planer writes to plan.md" "write.*plan\|plan.*write" "$KIL/agent/pl
 # --- Agent Count ---
 echo ""
 echo "[Agent Count]"
-AGENT_COUNT=$(find "$KIL/agent" -name "*_log.md" -maxdepth 1 | wc -l)
-assert "5 agents have log files" test "$AGENT_COUNT" -eq 5
-LESSON_COUNT=$(find "$KIL/agent" -name "*_lesson.md" -maxdepth 1 | wc -l)
-assert "5 agents have lesson files" test "$LESSON_COUNT" -eq 5
+LOG_COUNT=$(find "$KIL/agent" -name "*_log.md" -maxdepth 1 | wc -l)
+assert "6 agents have log files (factseeker planer coder simplifer tester reviewer)" test "$LOG_COUNT" -eq 6
 
 # --- Cross-References ---
 echo ""
 echo "[Cross-References]"
 assert_grep "coder reads planer_plan.md" "planer_plan" "$KIL/agent/coder.md"
-assert_grep "workflow refs factseeker" "factseeker" "$KIL/command/workflow.md"
-assert_grep "workflow refs planer" "planer" "$KIL/command/workflow.md"
-assert_grep "workflow refs coder" "coder" "$KIL/command/workflow.md"
-assert_grep "workflow refs simplifer" "simplifer" "$KIL/command/workflow.md"
-assert_grep "workflow refs tester" "tester" "$KIL/command/workflow.md"
+assert_grep "reviewer reads tester_log.md" "tester_log\|tester.*log" "$KIL/agent/reviewer.md"
+assert_grep "reviewer reads planer_plan.md" "planer_plan\|plan" "$KIL/agent/reviewer.md"
+
+# --- AGENTS.md: overseer injects lessons ---
+echo ""
+echo "[AGENTS.md — Overseer Self-Evolution]"
+assert_grep "AGENTS.md has Team Lessons section" "Team Lessons" "$TEAM_DIR/.claude/AGENTS.md"
+assert_grep "AGENTS.md references overseer" "overseer\|chat window" "$TEAM_DIR/.claude/AGENTS.md"
+assert_not_grep "AGENTS.md does NOT reference reflector agent" "reflector" "$TEAM_DIR/.claude/AGENTS.md"
+
+# --- special-1 references overseer ---
+echo ""
+echo "[special-1 — Overseer Pipeline]"
+assert_grep "special-1 has overseer step" "overseer\|chat window" "$KIL/command/special-1.md"
+assert_grep "special-1 injects into AGENTS.md" "AGENTS.md" "$KIL/command/special-1.md"
+assert_grep "special-1 has reviewer stage" "reviewer\|Reviewer" "$KIL/command/special-1.md"
 
 echo ""
 echo "=== Quality Tests: $PASS passed, $FAIL failed ==="
