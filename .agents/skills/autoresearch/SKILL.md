@@ -541,7 +541,7 @@ After the wizard completes, the user gets a ready-to-paste `/autoresearch` invoc
 
 ## Bounded Iterations
 
-By default, autoresearch loops **forever** until manually interrupted. To run exactly N iterations, add `Iterations: N` to your inline config.
+By default, autoresearch loops until the metric plateaus (no improvement to the best metric for 15 consecutive measured iterations), then asks the user whether to stop, continue, or change strategy. To run exactly N iterations instead, add `Iterations: N` to your inline config.
 
 **Unlimited (default):**
 ```
@@ -562,11 +562,46 @@ After N iterations Claude stops and prints a final summary with baseline → cur
 
 | Scenario | Recommendation |
 |----------|---------------|
-| Run overnight, review in morning | Unlimited (default) |
+| Run overnight, review in morning | Unlimited + `Plateau-Patience: off` |
 | Quick 30-min improvement session | `Iterations: 10` |
 | Targeted fix with known scope | `Iterations: 5` |
 | Exploratory — see if approach works | `Iterations: 15` |
 | CI/CD pipeline integration | `--iterations N` flag (set N based on time budget) |
+| Long run with safety net (default) | Unlimited (plateau detection after 15 iterations) |
+
+### Plateau Detection
+
+In unlimited mode, autoresearch tracks whether the best metric is still improving. If 15 consecutive measured iterations pass without a new best, the loop pauses and asks the user to decide: stop, continue, or change strategy. Configure with `Plateau-Patience: N` (default 15), or disable with `Plateau-Patience: off`. Bounded mode ignores this setting.
+
+```
+/autoresearch
+Goal: Reduce bundle size below 200KB
+Verify: npx esbuild src/index.ts --bundle --minify | wc -c
+Plateau-Patience: 20
+```
+
+### Metric-Valued Guards
+
+By default, guards are pass/fail (exit code 0 = pass). For guards that measure a number (bundle size, response time, coverage), you can set a regression threshold instead:
+
+```
+/autoresearch
+Goal: Increase test coverage to 95%
+Verify: npx jest --coverage 2>&1 | grep 'All files' | awk '{print $4}'
+Guard: npx esbuild src/index.ts --bundle --minify | wc -c
+Guard-Direction: lower is better
+Guard-Threshold: 5%
+```
+
+This means: "optimize coverage, but reject any change that grows bundle size more than 5% from baseline." The primary metric still drives keep/discard. The guard-metric is tracked in the results log for visibility into drift over time.
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `Guard` | Yes | Command that outputs a number (metric-valued) or exits 0/1 (pass/fail) |
+| `Guard-Direction` | Only for metric-valued | `higher is better` or `lower is better` |
+| `Guard-Threshold` | Only for metric-valued | Max allowed regression as % of baseline (e.g., `5%`, `0%` for strict) |
+
+Without `Guard-Direction` and `Guard-Threshold`, the guard operates in pass/fail mode.
 
 ## Setup Phase (Do Once)
 
